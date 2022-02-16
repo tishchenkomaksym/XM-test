@@ -1,0 +1,49 @@
+version: '3'
+
+services:
+    db-xm:
+        container_name: db-xm
+        image: mysql:8
+        command: --init-file /data/application/init.sql
+        restart: always
+        ports:
+            - ${DB_PORT}:3306
+        volumes:
+            - db-xm:/var/lib/mysql
+            - ./docker/conf/mysql:/etc/mysql
+            - ./docker/init.sql:/data/application/init.sql
+            - ./docker/supervisor:/etc/supervisor
+            - ./docker/cron/:/var/spool/cron/crontabs
+        environment:
+            MYSQL_ROOT_PASSWORD: W7zXgR0LHp4nV86T
+            MYSQL_DATABASE: db-xm
+            MYSQL_USER: maks
+            MYSQL_PASSWORD: BGmUd3iPvDf6925
+        logging:
+            options:
+                max-size: 10m
+
+    apache-xm:
+        build:
+            context: ./
+            dockerfile: docker/Dockerfile
+        container_name: apache-xm
+        volumes:
+            - .:/var/www/html
+            - ./docker/php/php.ini:/usr/local/etc/php/php.ini
+        environment:
+#            PHP_IDE_CONFIG: "serverName=csv-docker"
+            DB_PORT: 3306
+            DB_HOST: db-xm
+
+        restart: always
+        ports:
+            - ${APP_PORT}:80
+        expose:
+            - 9000
+        depends_on:
+            - db-xm
+
+
+volumes:
+    db-xm:
