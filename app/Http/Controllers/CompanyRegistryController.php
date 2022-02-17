@@ -6,24 +6,26 @@ use App\Http\Requests\CompanyRequest;
 use App\Mail\SubmittedCompanyEmail;
 use App\Models\CompanyRegistry;
 use App\Service\CompanyService;
+use App\Service\HistoryService;
 use Illuminate\Support\Facades\Mail;
 
-class CompanyController extends Controller
+
+class CompanyRegistryController extends Controller
 {
+
+    /**
+     * @var HistoryService
+     */
+    private HistoryService $historyService;
     /**
      * @var CompanyService
      */
     private CompanyService $companyService;
 
-    public function __construct(CompanyService $companyService)
+    public function __construct( HistoryService $historyService, CompanyService $companyService)
     {
+        $this->historyService = $historyService;
         $this->companyService = $companyService;
-    }
-
-    public function index()
-    {
-        $companyRegistry = CompanyRegistry::paginate(20);
-        return view('companies.index', compact('companyRegistry'));
     }
 
     public function create()
@@ -31,22 +33,23 @@ class CompanyController extends Controller
         return view('companies.create');
     }
 
-    public function show(CompanyRegistry $company)
-    {
-        return view('companies.show', compact('company'));
-    }
 
-    public function store(CompanyRequest $request)
+    public function request(CompanyRequest $request)
     {;
-        $company = CompanyRegistry::create(
+        $company = CompanyRegistry::make(
             [
                 'symbol'  => $request['symbol'],
                 'start_date' => $request['start_date'],
                 'end_date' => $request['end_date'],
                 'email' => $request['email'],
-            ]
-        );
+            ]);
         Mail::to($company->email)->send(new SubmittedCompanyEmail($company));
-        return redirect()->route('companies.show', $company);
+
+        $collection = collect(json_decode($this->historyService->getHistoricalQuotes($company->symbol))->prices);
+
+        $history = $this->companyService->filterByDates($collection, $company);
+
+        return view('companies.show', compact('history'));
     }
+
 }

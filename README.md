@@ -2,12 +2,10 @@
 
 - docker-compose build
 - docker-compose up -d
-- docker-compose exec apache-xm bash
-- make run
+
 
 ## routes
 - /companies/create - form
-- /history - history table
 - /chart-prices - chart
 
-
+Check email please in spam. I do not have ssl for my test mailgun!

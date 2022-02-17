@@ -37,7 +37,7 @@ class CorrectEndDate implements Rule
         $startDate = new Carbon($this->startDate);
         $now = new Carbon();
 
-        if ($endDate >= $startDate && $endDate > $now) {
+        if ($endDate >= $startDate && $endDate <= $now) {
             return true;
         }
 

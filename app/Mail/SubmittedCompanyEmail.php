@@ -4,6 +4,8 @@ namespace App\Mail;
 
 use App\Models\Company;
 use App\Models\CompanyRegistry;
+use App\Service\CompanyService;
+use App\Service\HistoryService;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
@@ -20,11 +22,11 @@ class SubmittedCompanyEmail extends Mailable
     /**
      * Create a new message instance.
      *
-     * @param $company
+     * @param $companyRegistry
      */
-    public function __construct(CompanyRegistry $company)
+    public function __construct(CompanyRegistry $companyRegistry)
     {
-        $this->companyRegistry = $company;
+        $this->companyRegistry = $companyRegistry;
     }
 
     /**
@@ -34,12 +36,12 @@ class SubmittedCompanyEmail extends Mailable
      */
     public function build()
     {
-        $company = Company::where('symbol', $this->companyRegistry->symbol)->first();
-        $email = $this->from(config('mail.mailers.smtp.username'))
-                      ->subject($company->name)
-                      ->view('emails.submittedCompany');
+        $historyService = new CompanyService();
+        $companyName = $historyService->getCompanyName($this->companyRegistry->symbol);
 
-        return $email;
+        return $this->from(config('mail.mailers.smtp.username'))
+                    ->subject($companyName)
+                    ->view('emails.submittedCompany');;
 
     }
 }

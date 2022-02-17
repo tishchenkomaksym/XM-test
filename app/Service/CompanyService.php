@@ -5,7 +5,9 @@ namespace App\Service;
 
 
 use App\Models\Company;
+use Carbon\Carbon;
 use HttpRequest;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Http;
 
 class CompanyService
@@ -26,23 +28,35 @@ class CompanyService
         return $symbols;
     }
 
-    public function saveCompanyData()
+    public function getCompanyName(string $symbol)
     {
-        Company::truncate();
+        $name = '';
         $response = Http::get(self::LISTINGS_COMPANY_URL);
         foreach (array_chunk(json_decode($response->body(), true), 1000) as $chunk) {
             foreach ($chunk as $companyData) {
-                Company::create([
-                    'name' => $companyData['Company Name'],
-                    'financial_status' => $companyData['Financial Status'],
-                    'market_category' => $companyData['Market Category'],
-                    'round_lot_size' => $companyData['Round Lot Size'],
-                    'security_name' => $companyData['Security Name'],
-                    'symbol' => $companyData['Symbol'],
-                    'test_issue' => $companyData['Test Issue'],
-                ]);
+                if ($symbol === $companyData['Symbol']) {
+                    $name = $companyData['Company Name'];
+                }
             }
         }
+        return $name;
+    }
 
+    /**
+     * @param $collection
+     * @param $company
+     *
+     * @return mixed
+     */
+    public function filterByDates(Collection $collection, $company)
+    {
+        return $collection->filter(function($model) use($company) {
+            $date = Carbon::createFromTimestamp($model->date);
+            $start_date = new Carbon($company->start_date);
+            $end_date = new Carbon($company->end_date);
+            if ($date >= $start_date && $date <= $end_date) {
+                return true;
+            }
+        });
     }
 }
