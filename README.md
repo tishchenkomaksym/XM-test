@@ -1,5 +1,6 @@
 # For start app
 
+- cofig in .env.example
 - docker-compose build
 - docker-compose up -d
 
